@@ -1,10 +1,11 @@
 import React from 'react';
 import { Icons } from './Icons';
-import { AnalysisResponse } from '../services/gemini';
+import { AnalysisResponse, AnalysisMode } from '../services/gemini';
 
 interface AnalysisResultProps {
   image: string;
   data: AnalysisResponse | null;
+  mode: AnalysisMode;
   onReset: () => void;
   loading: boolean;
 }
@@ -21,7 +22,7 @@ const stripMarkdown = (text: string) => {
     .replace(/`/g, '');              // Code ticks
 };
 
-export const AnalysisResult: React.FC<AnalysisResultProps> = ({ image, data, onReset, loading }) => {
+export const AnalysisResult: React.FC<AnalysisResultProps> = ({ image, data, mode, onReset, loading }) => {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center h-[60vh] animate-in fade-in duration-700">
@@ -31,8 +32,10 @@ export const AnalysisResult: React.FC<AnalysisResultProps> = ({ image, data, onR
             <Icons.Camera className="w-6 h-6 text-stone-600" />
           </div>
         </div>
-        <h3 className="mt-6 text-xl font-medium text-stone-300">正在分析画面...</h3>
-        <p className="mt-2 text-stone-500">AI 正在计算 Canon R50 的最佳参数</p>
+        <h3 className="mt-6 text-xl font-medium text-stone-300">
+          {mode === 'optimize' ? '正在诊断照片...' : '正在分析风格...'}
+        </h3>
+        <p className="mt-2 text-stone-500">AI 正在计算 Canon R50 的{mode === 'optimize' ? '优化建议' : '复刻参数'}</p>
       </div>
     );
   }
@@ -110,10 +113,12 @@ export const AnalysisResult: React.FC<AnalysisResultProps> = ({ image, data, onR
         {/* Main Guide Card */}
         <div className="bg-stone-900 border border-stone-800 rounded-2xl p-6 shadow-lg">
           <div className="flex items-center gap-3 mb-4">
-            <div className="bg-orange-500 rounded-lg p-2 text-white">
-              <Icons.Camera className="w-6 h-6" />
+            <div className={`rounded-lg p-2 text-white ${mode === 'optimize' ? 'bg-purple-600' : 'bg-orange-500'}`}>
+              {mode === 'optimize' ? <Icons.Sparkles className="w-6 h-6" /> : <Icons.Camera className="w-6 h-6" />}
             </div>
-            <h2 className="text-xl font-bold text-white">R50 拍摄指南</h2>
+            <h2 className="text-xl font-bold text-white">
+              {mode === 'optimize' ? 'R50 优化指南' : 'R50 复刻指南'}
+            </h2>
           </div>
           <div className="prose prose-invert prose-stone max-w-none">
             {/* Added whitespace-pre-wrap to handle newlines without markdown */}
@@ -127,7 +132,9 @@ export const AnalysisResult: React.FC<AnalysisResultProps> = ({ image, data, onR
         <div className="bg-stone-900/50 border border-stone-800 rounded-2xl p-6">
           <div className="flex items-center gap-2 mb-4 text-stone-400">
             <Icons.Check className="w-5 h-5 text-emerald-500" />
-            <h3 className="text-lg font-semibold text-stone-200">优化建议</h3>
+            <h3 className="text-lg font-semibold text-stone-200">
+              {mode === 'optimize' ? '诊断与改进' : '优化建议'}
+            </h3>
           </div>
           <ul className="space-y-4">
             {cleanTips.map((tip, index) => (
@@ -145,7 +152,7 @@ export const AnalysisResult: React.FC<AnalysisResultProps> = ({ image, data, onR
         <div className="flex gap-3 p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
           <Icons.Info className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-blue-200/80 leading-relaxed">
-            AI 生成的参数仅供参考。实际拍摄效果受现场光线、镜头型号（如 RF-S 18-45mm 套机头或 50mm 定焦）影响，请根据 R50 屏幕的曝光模拟进行微调。
+            AI 生成的参数仅供参考。实际效果受环境光影响，建议开启 R50 的“模拟曝光”功能实时预览。
           </p>
         </div>
       </div>

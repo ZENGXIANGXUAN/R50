@@ -1,5 +1,5 @@
 import React from 'react';
-import { Camera, Upload, RefreshCw, Aperture, Timer, Zap, Sliders, CheckCircle2, AlertCircle, Sun, Palette } from 'lucide-react';
+import { Camera, Upload, RefreshCw, Aperture, Timer, Zap, Sliders, CheckCircle2, AlertCircle, Sun, Palette, Sparkles, Copy } from 'lucide-react';
 
 export const Icons = {
   Camera: (props: any) => <Camera {...props} />,
@@ -13,4 +13,6 @@ export const Icons = {
   Info: (props: any) => <AlertCircle {...props} />,
   WhiteBalance: (props: any) => <Sun {...props} />,
   WBShift: (props: any) => <Palette {...props} />,
+  Sparkles: (props: any) => <Sparkles {...props} />,
+  Copy: (props: any) => <Copy {...props} />,
 };

@@ -1,21 +1,32 @@
 import React, { useState } from 'react';
 import { PhotoUpload } from './components/PhotoUpload';
 import { AnalysisResult } from './components/AnalysisResult';
-import { analyzeImageForR50, AnalysisResponse } from './services/gemini';
+import { analyzeImageForR50, AnalysisResponse, AnalysisMode } from './services/gemini';
 import { Icons } from './components/Icons';
 
 export default function App() {
   const [image, setImage] = useState<string | null>(null);
+  const [mode, setMode] = useState<AnalysisMode | null>(null);
   const [analysis, setAnalysis] = useState<AnalysisResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleImageSelected = async (base64: string) => {
+  const handleImageSelected = (base64: string) => {
     setImage(base64);
+    setMode(null); // Reset mode to show selection screen
+    setAnalysis(null);
+    setError(null);
+  };
+
+  const startAnalysis = async (selectedMode: AnalysisMode) => {
+    if (!image) return;
+    
+    setMode(selectedMode);
     setLoading(true);
     setError(null);
+    
     try {
-      const result = await analyzeImageForR50(base64);
+      const result = await analyzeImageForR50(image, selectedMode);
       setAnalysis(result);
     } catch (err) {
       console.error(err);
@@ -27,6 +38,7 @@ export default function App() {
 
   const handleReset = () => {
     setImage(null);
+    setMode(null);
     setAnalysis(null);
     setError(null);
   };
@@ -44,7 +56,7 @@ export default function App() {
               Canon <span className="text-orange-500">R50</span> 摄影助手
             </span>
           </div>
-          {image && !loading && (
+          {image && mode && !loading && (
              <button 
              onClick={handleReset}
              className="md:hidden text-stone-400 hover:text-white"
@@ -58,6 +70,7 @@ export default function App() {
       {/* Main Content */}
       <main className="pt-24 pb-8 px-4 w-full max-w-7xl mx-auto">
         {!image ? (
+          // 1. Upload View
           <div className="flex flex-col items-center justify-center min-h-[70vh] animate-in slide-in-from-bottom-4 duration-500">
             <div className="text-center mb-12 max-w-2xl">
               <h1 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight">
@@ -67,7 +80,7 @@ export default function App() {
                 </span>
               </h1>
               <p className="text-lg text-stone-400">
-                上传一张你想模仿的照片，AI 将为你解析光圈、快门、ISO，并教你如何在 Canon R50 上进行设置。
+                上传照片，AI 将为你提供复刻参数或优化建议，教你玩转 Canon R50。
               </p>
             </div>
             <PhotoUpload onImageSelected={handleImageSelected} />
@@ -87,7 +100,61 @@ export default function App() {
               </div>
             </div>
           </div>
+        ) : !mode ? (
+          // 2. Mode Selection View
+          <div className="flex flex-col items-center justify-center min-h-[60vh] animate-in fade-in duration-500">
+            <div className="w-full max-w-4xl">
+              <h2 className="text-3xl font-bold text-white text-center mb-8">你想如何处理这张照片？</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                {/* Replicate Card */}
+                <button 
+                  onClick={() => startAnalysis('replicate')}
+                  className="group relative flex flex-col items-center p-8 bg-stone-900 border border-stone-800 rounded-2xl hover:bg-stone-800 hover:border-orange-500/50 transition-all duration-300 text-center"
+                >
+                  <div className="w-16 h-16 bg-stone-800 rounded-full flex items-center justify-center mb-6 group-hover:bg-orange-500/20 group-hover:text-orange-500 transition-colors">
+                    <Icons.Copy className="w-8 h-8 text-stone-400 group-hover:text-orange-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">复刻同款风格</h3>
+                  <p className="text-stone-400 text-sm leading-relaxed">
+                    我很喜欢这张照片的色调和感觉。<br/>
+                    请教我如何在 R50 上设置参数拍出类似的效果。
+                  </p>
+                  <div className="mt-6 px-4 py-2 rounded-full border border-stone-700 text-stone-400 text-sm group-hover:border-orange-500 group-hover:text-orange-500 transition-all">
+                    选择此模式
+                  </div>
+                </button>
+
+                {/* Optimize Card */}
+                <button 
+                  onClick={() => startAnalysis('optimize')}
+                  className="group relative flex flex-col items-center p-8 bg-stone-900 border border-stone-800 rounded-2xl hover:bg-stone-800 hover:border-purple-500/50 transition-all duration-300 text-center"
+                >
+                  <div className="w-16 h-16 bg-stone-800 rounded-full flex items-center justify-center mb-6 group-hover:bg-purple-500/20 group-hover:text-purple-500 transition-colors">
+                    <Icons.Sparkles className="w-8 h-8 text-stone-400 group-hover:text-purple-500" />
+                  </div>
+                  <h3 className="text-xl font-bold text-white mb-2">帮我优化照片</h3>
+                  <p className="text-stone-400 text-sm leading-relaxed">
+                    这是我拍的照片，但感觉不够好。<br/>
+                    请诊断问题并告诉我如何设置参数能拍得更棒。
+                  </p>
+                  <div className="mt-6 px-4 py-2 rounded-full border border-stone-700 text-stone-400 text-sm group-hover:border-purple-500 group-hover:text-purple-500 transition-all">
+                    选择此模式
+                  </div>
+                </button>
+
+              </div>
+              <button 
+                onClick={handleReset}
+                className="mt-12 mx-auto flex items-center gap-2 text-stone-500 hover:text-stone-300 transition-colors"
+              >
+                <Icons.Refresh className="w-4 h-4" />
+                重新上传照片
+              </button>
+            </div>
+          </div>
         ) : (
+          // 3. Analysis Result View
           <div className="animate-in fade-in duration-500">
              {error ? (
                 <div className="flex flex-col items-center justify-center h-64 text-center">
@@ -107,6 +174,7 @@ export default function App() {
                <AnalysisResult 
                  image={image} 
                  data={analysis} 
+                 mode={mode}
                  loading={loading} 
                  onReset={handleReset} 
                />
