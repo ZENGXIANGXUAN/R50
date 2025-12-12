@@ -1,0 +1,5 @@
+{
+  "name": "Canon R50 Photo Tutor",
+  "description": "Upload a photo and get AI-powered advice on how to replicate or improve it using your Canon EOS R50 settings.",
+  "requestFramePermissions": []
+}
